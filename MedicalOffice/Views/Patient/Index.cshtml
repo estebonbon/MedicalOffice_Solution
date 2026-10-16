@@ -1,0 +1,59 @@
+@model IEnumerable<MedicalOffice.Models.Patient>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Summary)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Age)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.MedicalTrial.TrialName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Coverage)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Doctor.Summary)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(model => item.Summary)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Age)
+            </td>
+            <td>
+                    @Html.DisplayFor(model => item.MedicalTrial.TrialName)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Coverage)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Doctor.Summary)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.ID">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.ID">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.ID">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

@@ -1,0 +1,5 @@
+﻿// STEP 1: Create a new migration
+// Add-Migration InitialCreate -Context MedicalOfficeContext -OutputDir Data/MOMigrations
+
+// STEP 2: Apply migrations and create/update the database
+// Update-Database -Context MedicalOfficeContext
