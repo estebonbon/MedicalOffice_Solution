@@ -48,11 +48,10 @@ app.MapControllerRoute(
 app.MapRazorPages()
    .WithStaticAssets();
 
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-
-    MedicalOfficeInitializer.Initialize(services);
+//To prepare the database and seed data. Can comment this out some of the time.
+using (var scope = app.Services.CreateScope()) 
+{ var services = scope.ServiceProvider; 
+    MedicalOfficeInitializer.Initialize(serviceProvider: services, DeleteDatabase: false, 
+        UseMigrations: true, SeedSampleData: true); 
 }
-
 app.Run();
