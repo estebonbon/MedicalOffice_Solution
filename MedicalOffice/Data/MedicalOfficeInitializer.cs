@@ -87,6 +87,27 @@ namespace MedicalOffice.Data
                             });
                         context.SaveChanges();
                     }
+
+
+                    // Add to the region 'Seed Required Data'
+                    // Conditions - Needed for production and during development
+                    if (!context.Conditions.Any())
+                    {
+                        string[] conditions = new string[]  { "Asthma", "Cancer", "Cardiac disease", "Diabetes", "Hypertension", "Seizure disorder", "Circulation problems", "Bleeding disorder", "Thyroid condition", "Liver Disease", "Measles", "Mumps"};
+
+                        foreach (string condition in conditions)
+                        {
+                            Condition c = new Condition
+                            {
+                                ConditionName = condition
+                            };
+
+                            context.Conditions.Add(c);
+                        }
+
+                        context.SaveChanges();
+                    }
+
                 }
                 catch (Exception ex)
                 {
@@ -184,6 +205,32 @@ namespace MedicalOffice.Data
                             });
                             context.SaveChanges();
                         }
+
+
+                        // Now we can seed a few PatientConditions because we already have
+                        // a few Conditions and Patients. Be careful that you choose ones that exist!
+                        if (!context.PatientConditions.Any())
+                        {
+                            context.PatientConditions.AddRange(
+                                new PatientCondition
+                                {
+                                    ConditionID = context.Conditions.FirstOrDefault(c => c.ConditionName == "Cancer").ID,
+                                    PatientID = context.Patients.FirstOrDefault(p => p.LastName == "Flintstone" && p.FirstName == "Fred").ID
+                                },
+                                new PatientCondition
+                                {
+                                    ConditionID = context.Conditions.FirstOrDefault(c => c.ConditionName == "Cardiac disease").ID,
+                                    PatientID = context.Patients.FirstOrDefault(p => p.LastName == "Flintstone" && p.FirstName == "Fred").ID
+                                },
+                                new PatientCondition
+                                {
+                                    ConditionID = context.Conditions.FirstOrDefault(c => c.ConditionName == "Diabetes").ID,
+                                    PatientID = context.Patients.FirstOrDefault(p => p.LastName == "Flintstone" && p.FirstName == "Wilma").ID
+                                });
+
+                            context.SaveChanges();
+                        }
+
                     }
                     catch (Exception ex)
                     {

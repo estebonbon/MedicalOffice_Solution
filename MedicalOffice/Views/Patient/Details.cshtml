@@ -72,12 +72,23 @@
         <dd class="col-sm-10">
             @Html.DisplayFor(model => model.Coverage)
         </dd>
-        <dt 
-            class="col-sm-2">
-            @Html.DisplayFor(model => model.MedicalTrial.TrialName)
+
+        <dt class="col-sm-2">
+            Medical Trial
         </dt>
         <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.MedicalTrial.TrialName)
+            @(Model.MedicalTrial?.TrialName ?? "None")
+        </dd>
+
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.PatientConditions)
+        </dt>
+        <dd class="col-sm-10">
+            @foreach (var c in Model.PatientConditions)
+            {
+                @c.Condition.ConditionName
+                <br />
+            }
         </dd>
         <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.Doctor.Summary)

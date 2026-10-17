@@ -91,6 +91,20 @@
         </dd>
     </dl>
     <dl class="row">
+
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.PatientConditions)
+        </dt>
+        <dd class="col-sm-10">
+            @foreach (var c in Model.PatientConditions)
+            {
+                @c.Condition.ConditionName
+                <br />
+            }
+        </dd>
+
+    </dl>
+    <dl class="row">
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.Doctor.Summary)
         </dt>

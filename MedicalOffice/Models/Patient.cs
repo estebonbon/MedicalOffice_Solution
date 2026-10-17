@@ -91,6 +91,9 @@ namespace MedicalOffice.Models
         [Display(Name = "Medical Trial")]
         public MedicalTrial? MedicalTrial { get; set; } // Access the object for the medical trail
 
+        [Display(Name = "History")] 
+        public ICollection<PatientCondition> PatientConditions { get; set; } = new HashSet<PatientCondition>();
+
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             //The second argument (memberNames) is an IEnumerable<string> that
