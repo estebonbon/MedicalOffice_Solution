@@ -1,5 +1,6 @@
 ﻿using MedicalOffice.Models;
 using Microsoft.EntityFrameworkCore;
+using MedicalOffice.Utilities;
 using System.Diagnostics;
 
 namespace MedicalOffice.Data
@@ -25,7 +26,13 @@ namespace MedicalOffice.Data
                     //Note: .CanConnect() will return false if the database is not there!
                     if (DeleteDatabase || !context.Database.CanConnect())
                     {
-                        context.Database.EnsureDeleted(); //Delete the existing version
+                        //context.Database.EnsureDeleted(); //Delete the existing version
+                        if (!SqLiteDBUtility.ReallyEnsureDeleted(context)) //Delete the existing version
+                        {
+                            Debug.WriteLine("Could not clear the old version " +
+                            "of the database out of the way. You will need to exit " +
+                            "Visual Studio and try to do it manually.");
+                        }
                         if (UseMigrations)
                         {
                             context.Database.Migrate(); //Create the database and apply all migrations
@@ -184,38 +191,112 @@ namespace MedicalOffice.Data
                     }
 
                     try
+                    {
+                        //Add more Doctors
+                        if (context.Doctors.Count() < 4)//Don't add a second time
                         {
-                            //Add more Doctors
-                            if (context.Doctors.Count() < 4)//Don't add a second time
-                            {
-                                string[] firstNames = new string[] { "Woodstock", "Violet", "Charlie", "Lucy", "Linus", "Franklin", "Marcie", "Schroeder" };
-                                string[] lastNames = new string[] { "Hightower", "Broomspun", "Jones" };
+                            string[] firstNames = new string[] { "Woodstock", "Violet", "Charlie", "Lucy", "Linus", "Franklin", "Marcie", "Schroeder" };
+                            string[] lastNames = new string[] { "Hightower", "Broomspun", "Jones" };
 
-                                //Loop through names and add more
-                                foreach (string lastName in lastNames)
+                            //Loop through names and add more
+                            foreach (string lastName in lastNames)
+                            {
+                                foreach (string firstname in firstNames)
                                 {
-                                    foreach (string firstname in firstNames)
+                                    //Construct some details
+                                    Doctor a = new Doctor()
                                     {
-                                        //Construct some details
-                                        Doctor a = new Doctor()
-                                        {
-                                            FirstName = firstname,
-                                            LastName = lastName,
-                                            //Take second character of the last name and make it the middle name
-                                            MiddleName = lastName[1].ToString().ToUpper(),
-                                        };
-                                        context.Doctors.Add(a);
+                                        FirstName = firstname,
+                                        LastName = lastName,
+                                        //Take second character of the last name and make it the middle name
+                                        MiddleName = lastName[1].ToString().ToUpper(),
+                                    };
+                                    context.Doctors.Add(a);
+                                }
+                            }
+                            context.SaveChanges();
+                        }
+
+                        //So we can generate random data, create collections of the primary keys
+                        int[] doctorIDs = context.Doctors.Select(a => a.ID).ToArray();
+                        int doctorIDCount = doctorIDs.Length;// Why does this help efficiency?
+                        int[] medicalTrialIDs = context.MedicalTrials.Select(a => a.ID).ToArray();
+                        int medicalTrialIDCount = medicalTrialIDs.Length;
+
+
+                        //Add more Patients. Now it gets more interesting because we
+                        //have Foreign Keys to worry about
+                        //and more complicated property values to generate
+                        if (context.Patients.Count() < 5)
+                        {
+                            string[] firstNames = new string[] { "Lyric", "Antoinette", "Kendal", "Vivian", "Ruth", "Jamison", "Emilia", "Natalee", "Yadiel", "Jakayla", "Lukas", "Moses", "Kyler", "Karla", "Chanel", "Tyler", "Camilla", "Quintin", "Braden", "Clarence" };
+                            string[] lastNames = new string[] { "Watts", "Randall", "Arias", "Weber", "Stone", "Carlson", "Robles", "Frederick", "Parker", "Morris", "Soto", "Bruce", "Orozco", "Boyer", "Burns", "Cobb", "Blankenship", "Houston", "Estes", "Atkins", "Miranda", "Zuniga", "Ward", "Mayo", "Costa", "Reeves", "Anthony", "Cook", "Krueger", "Crane", "Watts", "Little", "Henderson", "Bishop" };
+                            int firstNameCount = firstNames.Length;
+
+                            // Birthdate for randomly produced Patients
+                            // We will subtract a random number of days from today
+                            DateTime startDOB = DateTime.Today;// More efficiency?
+                            int counter = 1; //Used to help add some Patients to Medical Trials
+
+
+                            foreach (string lastName in lastNames)
+                            {
+                                //Choose a random HashSet of 5 (Unique) first names
+                                HashSet<string> selectedFirstNames = new HashSet<string>();
+                                while (selectedFirstNames.Count() < 5)
+                                {
+                                    selectedFirstNames.Add(firstNames[random.Next(firstNameCount)]);
+                                }
+
+                                foreach (string firstName in selectedFirstNames)
+                                {
+                                    //Construct some Patient details
+                                    Patient patient = new Patient()
+                                    {
+                                        FirstName = firstName,
+                                        LastName = lastName,
+                                        MiddleName = lastName[1].ToString().ToUpper(),
+                                        OHIP = random.Next(2, 9).ToString() + random.Next(213214131, 989898989).ToString(),
+                                        EMail = (firstName.Substring(0, 2) + lastName + random.Next(11, 111).ToString() + "@outlook.com").ToLower(),
+                                        Phone = random.Next(200, 999).ToString() + random.Next(2000000, 9999999).ToString(),
+                                        ExpYrVisits = (byte)random.Next(2, 12),
+                                        DOB = startDOB.AddDays(-random.Next(60, 34675)),
+                                        DoctorID = doctorIDs[random.Next(doctorIDCount)]
+                                    };
+                                    if (counter % 3 == 0)//Every third Patient gets assigned to a Medical Trial
+                                    {
+                                        patient.MedicalTrialID = medicalTrialIDs[random.Next(medicalTrialIDCount)];
+                                    }
+                                    counter++;
+                                    context.Patients.Add(patient);
+                                    try
+                                    {
+                                        //Could be a duplicate OHIP or combination of DOB, First, and Last Name
+                                        context.SaveChanges();
+                                    }
+                                    catch (Exception)
+                                    {
+                                        //Failed so remove it and go on to the next.
+                                        //If you don't remove it from the context it
+                                        //will keep trying to save it each time you
+                                        //call .SaveChanges(). The save process will stop
+                                        //and prevent any other records in the queue from getting saved.
+                                        context.Patients.Remove(patient);
                                     }
                                 }
-                                context.SaveChanges();
                             }
-
-
+                            //Since we didn't guarantee that every Doctor had
+                            //at least one Patient assigned, let's remove Doctors
+                            //without any Patients. We could do this other ways, but it
+                            //gives a chance to show how to execute
+                            //raw SQL through our DbContext.
+                            string cmd = "DELETE FROM Doctors WHERE NOT EXISTS(SELECT 1 FROM Patients WHERE Doctors.Id = Patients.DoctorID)";
+                            context.Database.ExecuteSqlRaw(cmd);
 
                         }
-                        catch (Exception ex)
+                    }
+                    catch (Exception ex)
                         {
-
                             Debug.WriteLine(ex.GetBaseException().Message);
                         }
                     }
