@@ -30,6 +30,7 @@ public class DoctorController : Controller
         }
 
         var doctor = await _context.Doctors
+            .Include(d => d.Patients)
             .AsNoTracking()
             .FirstOrDefaultAsync(m => m.ID == id);
 
